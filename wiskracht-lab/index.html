@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiskracht LAB v3</title>
+<style>
+  :root{
+    --bg:#f5f6f7; --card:#ffffff; --ink:#1f2933; --muted:#5f6b76;
+    --line:#d7dce0; --dark:#2f3438; --light:#eceff1; --ok:#dff3e4;
+    --warn:#fff2cc; --bad:#fde2e2; --shadow:0 2px 10px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Lato,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.5}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .topbar{background:#23272a;color:white;padding:14px 20px;position:sticky;top:0;z-index:10}
+  .topbar-inner{max-width:1100px;margin:auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .brand{font-weight:800;letter-spacing:.2px}.brand small{font-weight:400;opacity:.8;margin-left:8px}
+  .nav{display:flex;gap:8px;flex-wrap:wrap}
+  .nav button{background:#3a4146;border:1px solid #596168;color:white;border-radius:8px;padding:8px 11px}
+  .nav button:hover{background:#4a535a}
+  main{max-width:1100px;margin:24px auto;padding:0 18px 60px}
+  .hero,.panel,.topic-card,.question-card,.stat-card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .hero{padding:24px;margin-bottom:20px}
+  h1,h2,h3{line-height:1.2;margin-top:0}
+  h1{font-size:32px} h2{font-size:25px} h3{font-size:20px}
+  .muted{color:var(--muted)}
+  .level-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+  .level{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fafafa}
+  .level strong{display:block;font-size:18px}
+  .topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+  .topic-card{padding:18px;display:flex;flex-direction:column;gap:10px}
+  .topic-card .code{font-size:13px;color:#66717c;font-weight:700}
+  .topic-card .criterion{min-height:72px}
+  .progressbar{height:8px;background:#e7eaed;border-radius:999px;overflow:hidden}
+  .progressbar > span{display:block;height:100%;background:#4b5963}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{border:1px solid #495057;background:white;color:#222;border-radius:8px;padding:9px 13px;font-weight:700}
+  .btn.primary{background:#2f3438;color:white}
+  .btn.soft{background:#f2f4f5}
+  .btn.bronze{background:#f7eee5}.btn.silver{background:#eef0f2}.btn.gold{background:#fbf2cc}
+  .panel{padding:20px;margin-bottom:16px}
+  .theory-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+  .theory-box{border-left:5px solid #6b737a;background:#f8f9fa;padding:14px 16px;border-radius:8px}
+  .example{background:#fff;border:1px solid var(--line);padding:14px;border-radius:8px;margin:10px 0}
+  .video-link{display:inline-block;margin:6px 0;padding:9px 12px;border-radius:8px;border:1px solid #b8c0c7;text-decoration:none;color:#1f2933;background:#fff}
+  .video-link:hover{background:#f2f4f5}
+  .level-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .level-buttons button{padding:14px;border-radius:10px;border:1px solid var(--line);font-weight:800}
+  .question-card{padding:22px}
+  .question-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+  .pill{border:1px solid #aab2b8;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800;white-space:nowrap;background:#f7f8f9}
+  .prompt{font-size:20px;font-weight:700;margin:10px 0 16px}
+  .visual{margin:14px 0;overflow-x:auto}
+  .answer-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .answer-row input{max-width:220px;border:1px solid #9fa8af;border-radius:8px;padding:10px 12px;background:white}
+  .choice-list{display:grid;gap:9px;margin-top:12px}
+  .choice{border:1px solid #aeb5bb;border-radius:9px;background:white;padding:12px;text-align:left}
+  .choice:hover{background:#f5f7f8}
+  .choice.selected{outline:3px solid #4b5963}
+  .feedback{margin-top:16px;padding:14px;border-radius:9px;border:1px solid var(--line)}
+  .feedback.ok{background:var(--ok)} .feedback.bad{background:var(--bad)} .feedback.hint{background:var(--warn)}
+  .solution{margin-top:10px;background:#f8f9fa;border:1px dashed #aab2b8;padding:12px;border-radius:8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .stat-card{padding:15px}
+  .stat-big{font-size:28px;font-weight:900}
+  table{border-collapse:collapse;width:100%} th,td{border:1px solid #b8c0c7;padding:8px;text-align:left}
+  th{background:#eceff1}
+  .svg-wrap{max-width:520px;background:white;border:1px solid #cdd3d8;border-radius:8px;padding:8px}
+  .mini-grid{display:inline-grid;grid-template-columns:repeat(3,34px);gap:2px;background:#333;padding:2px;vertical-align:middle}
+  .mini-grid span{width:34px;height:34px;background:white;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .mini-grid span.on{background:#9ea7ae}
+  .profile{display:flex;align-items:flex-end;gap:4px;height:90px;padding:8px;border:1px solid #cdd3d8;width:max-content;background:#fff}
+  .profile span{width:28px;background:#7f8a92;display:block}
+  .note{font-size:14px;color:#5d6872}
+  .hidden{display:none!important}
+  .empty{padding:20px;text-align:center;color:#69747d}
+  .footer-note{margin-top:28px;font-size:13px;color:#6f7980}
+
+  .video-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:12px}
+  .video-card{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+  .video-card iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#111}
+  .video-info{padding:12px}
+  .video-info strong{display:block;margin-bottom:4px}
+  .video-info a{display:inline-block;margin-top:8px;color:#24313a;font-weight:700}
+  .video-note{font-size:14px;color:#5d6872;margin-top:4px}
+  @media(max-width:760px){
+    .theory-grid,.grid2,.level-strip,.level-buttons{grid-template-columns:1fr}
+    .question-head{flex-direction:column}
+    body{font-size:16px}.prompt{font-size:18px}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">Wiskracht LAB <small>4A · PAV wiskunde · v3</small></div>
+    <div class="nav">
+      <button onclick="goHome()">Start</button>
+      <button onclick="startMixed()">Zilvermix</button>
+      <button onclick="showTeacher()">Mijn voortgang</button>
+    </div>
+  </div>
+</div>
+
+<main id="app"></main>
+
+<script>
+const TOPICS = {
+  sc1: {
+    code:"BV2_06.01", short:"Rekenen",
+    title:"Rekenen in betekenisvolle situaties",
+    criterion:"Ik voer met mijn rekenmachine eenvoudige berekeningen uit met gehele getallen, decimalen, breuken, procenten en verhoudingen.",
+    theory:`
+      <div class="theory-box">
+        <strong>Kern</strong>
+        <p>Lees eerst wat je moet zoeken. Kies daarna de bewerking. Je rekenmachine helpt bij het rekenen, maar kiest de bewerking niet voor jou.</p>
+        <p><strong>Procent:</strong> 25% = 25/100 = 0,25. Dus 25% van €64 = 0,25 × 64.</p>
+        <p><strong>Breuk:</strong> 3/5 van 45 = 45 ÷ 5 × 3.</p>
+        <p><strong>Verhouding 2 : 3:</strong> samen zijn dat 5 gelijke delen.</p>
+      </div>
+      <div class="example"><strong>Voorbeeld zilver</strong><br>Een trui kost €80 en is 25% afgeprijsd. Korting = 0,25 × 80 = €20. Nieuwe prijs = €60.</div>`,
+    videos:[["Procenten – rekenen met percentages (WiskundeAcademie)","https://www.youtube.com/watch?v=SXT53Be6VEA"]],
+    qs:{bronze:[],silver:[],gold:[]}
+  },
+  sc2: {
+    code:"BV2_06.02", short:"Schatten & afronden",
+    title:"Schatten en zinvol afronden",
+    criterion:"Ik schat resultaten en rond antwoorden zinvol af in concrete situaties.",
+    theory:`
+      <div class="theory-box">
+        <strong>Kern</strong>
+        <p><strong>Schat eerst</strong> met eenvoudige getallen. Bereken daarna exact. Vergelijk beide antwoorden.</p>
+        <p>Rond niet automatisch af: kijk naar de situatie. 8,3 flessen betekent bijvoorbeeld <strong>9 flessen kopen</strong>, want je kunt geen 0,3 fles kopen en je mag niet tekortkomen.</p>
+      </div>
+      <div class="example"><strong>Voorbeeld zilver</strong><br>17 spelers drinken elk 0,75 L. Dat is 12,75 L. Flessen zijn 1,5 L: 12,75 ÷ 1,5 = 8,5. Je koopt 9 flessen.</div>`,
+    videos:[],
+    qs:{bronze:[],silver:[],gold:[]}
+  },
+  sc3: {
+    code:"BV2_06.03", short:"3D ↔ 2D",
+    title:"Van een 3D-situatie naar een 2D-voorstelling",
+    criterion:"Ik verbind een 3D-situatie met de juiste 2D-voorstelling.",
+    theory:`
+      <div class="theory-box">
+        <strong>Kern</strong>
+        <p><strong>Bovenaanzicht:</strong> je kijkt van boven. Je ziet welke plaatsen op de grond bezet zijn, maar niet automatisch hoeveel blokken er boven elkaar staan.</p>
+        <p><strong>Vooraanzicht:</strong> je kijkt recht van voren. Per kolom zie je de grootste hoogte.</p>
+        <p><strong>Zijaanzicht:</strong> hetzelfde principe, maar van opzij.</p>
+      </div>
+      <div class="example"><strong>Belangrijk</strong><br>Twee stapelingen kunnen hetzelfde bovenaanzicht hebben, maar toch verschillen in hoogte.</div>`,
+    videos:[["Aanzichten tekenen – vooraanzicht, zijaanzicht, bovenaanzicht","https://www.youtube.com/watch?v=HVltCPFByJ4"]],
+    qs:{bronze:[],silver:[],gold:[]}
+  },
+  sc4: {
+    code:"BV2_06.04", short:"Gegevens & grafieken",
+    title:"Grafieken, tabellen, frequenties en formules",
+    criterion:"Ik interpreteer grafieken, tabellen, diagrammen en eenvoudige formules en herken misleidende voorstellingen.",
+    theory:`
+      <div class="theory-box">
+        <strong>Kern</strong>
+        <p><strong>Absolute frequentie = aantal.</strong></p>
+        <p><strong>Relatieve frequentie = deel van het totaal</strong>, vaak als percentage.</p>
+        <p>Voorbeeld: 8 van 20 leerlingen kiezen voetbal. Absolute frequentie = 8. Relatieve frequentie = 8 ÷ 20 × 100 = 40%.</p>
+        <p>Bij grafieken controleer je titel, labels, schaal, beginpunt van de y-as en of balken eerlijk getekend zijn.</p>
+      </div>
+      <div class="example"><strong>Misleiding</strong><br>84 en 92 verschillen 8 punten. Als de y-as pas bij 80 start, lijkt dat verschil veel groter dan wanneer de y-as bij 0 start.</div>`,
+    videos:[],
+    qs:{bronze:[],silver:[],gold:[]}
+  },
+  sc5: {
+    code:"BV2_06.05", short:"Gemiddelde & mediaan",
+    title:"Gemiddelde en mediaan interpreteren",
+    criterion:"Ik interpreteer de mediaan en het rekenkundig gemiddelde van numerieke gegevens.",
+    theory:`
+      <div class="theory-box">
+        <strong>Gemiddelde</strong><p>Tel alle waarden op en deel door het aantal waarden.</p>
+        <strong>Mediaan</strong><p>Zet de waarden van klein naar groot. De middelste waarde is de mediaan.</p>
+        <p>Een uitschieter beïnvloedt het gemiddelde vaak sterker dan de mediaan.</p>
+      </div>
+      <div class="example"><strong>Voorbeeld</strong><br>2, 3, 3, 4, 8 → gemiddelde = 4; mediaan = 3. Door de 8 ligt het gemiddelde hoger.</div>`,
+    videos:[
+      ["Mediaan – WiskundeAcademie","https://www.youtube.com/watch?v=-A7Oveo3TZI"],
+      ["Rekenkundig gemiddelde – uitlegvideo","https://www.youtube.com/watch?v=GWDqQ7TMsG8"]
+    ],
+    qs:{bronze:[],silver:[],gold:[]}
+  },
+  sc6: {
+    code:"BV2_06.06", short:"Problemen oplossen",
+    title:"Wiskundige problemen oplossen",
+    criterion:"Ik los problemen uit herkenbare situaties op door passende wiskunde te gebruiken.",
+    theory:`
+      <div class="theory-box">
+        <strong>Werk in drie stappen</strong>
+        <p>1. <strong>Selecteer:</strong> welke gegevens heb je nodig?</p>
+        <p>2. <strong>Bereken:</strong> welke bewerking(en) passen?</p>
+        <p>3. <strong>Controleer:</strong> past je antwoord bij de situatie en moet je afronden?</p>
+      </div>
+      <div class="example"><strong>Voorbeeld zilver</strong><br>17 personen krijgen 180 g pasta. Totaal = 3060 g. Pakken zijn 500 g: 3060 ÷ 500 = 6,12, dus je koopt 7 pakken.</div>`,
+    videos:[],
+    qs:{bronze:[],silver:[],gold:[]}
+  }
+};
+
+const rint=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const choice=a=>a[Math.floor(Math.random()*a.length)];
+const euro=n=>"€ "+n.toFixed(2).replace(".",",");
+const round2=n=>Math.round(n*100)/100;
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const pct=(part,total)=>Math.round(part/total*100);
+const letter=i=>"ABCDEFGHI"[i];
+
+function numQ(prompt,answer,unit,hint,solution,visual=""){
+  return {type:"number",prompt,answer,tolerance:0.011,unit:unit||"",hint,solution,visual};
+}
+function chQ(prompt,options,answerIndex,hint,solution,visual=""){
+  return {type:"choice",prompt,options,answerIndex,hint,solution,visual};
+}
+function randPrice(min=10,max=100){return rint(min*20,max*20)/20}
+function formatMinutes(m){const h=Math.floor(m/60), min=m%60; return `${h} u ${String(min).padStart(2,"0")} min`}
+
+function barChart(labels,vals,ymin=0,ymax=null,title=""){
+  ymax=ymax??Math.ceil(Math.max(...vals)/10)*10;
+  if(ymax===ymin)ymax=ymin+10;
+  const w=480,h=245,pad=42,bw=45,gap=(w-2*pad-labels.length*bw)/(labels.length-1||1);
+  let bars="",texts="";
+  vals.forEach((v,i)=>{
+    const x=pad+i*(bw+gap), y=25+(ymax-v)/(ymax-ymin)*160, bh=185-y;
+    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="#7f8a92"></rect>`;
+    texts+=`<text x="${x+bw/2}" y="210" text-anchor="middle" font-size="12">${labels[i]}</text><text x="${x+bw/2}" y="${Math.max(18,y-5)}" text-anchor="middle" font-size="12">${v}</text>`;
+  });
+  return `<div class="svg-wrap"><svg viewBox="0 0 ${w} ${h}" width="100%" aria-label="staafdiagram">
+  <text x="${w/2}" y="16" text-anchor="middle" font-weight="700" font-size="14">${title}</text>
+  <line x1="${pad}" y1="25" x2="${pad}" y2="185" stroke="#333"/><line x1="${pad}" y1="185" x2="${w-pad+8}" y2="185" stroke="#333"/>
+  <text x="8" y="30" font-size="11">${ymax}</text><text x="8" y="185" font-size="11">${ymin}</text>${bars}${texts}</svg></div>`;
+}
+function lineChart(labels,vals,title=""){
+  const w=480,h=245,pad=45,max=Math.ceil(Math.max(...vals)/10)*10;
+  const pts=vals.map((v,i)=>[pad+i*((w-2*pad)/(vals.length-1)),185-v/max*150]);
+  const poly=pts.map(p=>p.join(",")).join(" ");
+  let extras="";
+  pts.forEach((p,i)=>extras+=`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#59656d"/><text x="${p[0]}" y="210" text-anchor="middle" font-size="12">${labels[i]}</text><text x="${p[0]}" y="${p[1]-9}" text-anchor="middle" font-size="12">${vals[i]}</text>`);
+  return `<div class="svg-wrap"><svg viewBox="0 0 ${w} ${h}" width="100%"><text x="${w/2}" y="16" text-anchor="middle" font-weight="700" font-size="14">${title}</text><line x1="${pad}" y1="30" x2="${pad}" y2="185" stroke="#333"/><line x1="${pad}" y1="185" x2="${w-pad+8}" y2="185" stroke="#333"/><polyline points="${poly}" fill="none" stroke="#59656d" stroke-width="3"/>${extras}</svg></div>`;
+}
+function topGrid(grid){
+  let s=`<div class="mini-grid">`;
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++)s+=`<span class="${grid[r][c]>0?"on":""}"></span>`;
+  return s+"</div>";
+}
+function profileView(vals){
+  return `<div class="profile">${vals.map(v=>`<span style="height:${v*24}px" title="${v}"></span>`).join("")}</div>`;
+}
+function blockScene(grid){
+  const size=28, ox=150, oy=48;
+  let cubes=[];
+  for(let r=2;r>=0;r--) for(let c=0;c<3;c++) for(let z=0;z<grid[r][c];z++) cubes.push({r,c,z,ord:r+c+z*.01});
+  cubes.sort((a,b)=>a.ord-b.ord);
+  let shapes="";
+  for(const q of cubes){
+    const x=ox+(q.c-q.r)*size*.72, y=oy+(q.c+q.r)*size*.38-q.z*size*.72;
+    const a=size*.72,b=size*.38,hh=size*.72;
+    const top=`${x},${y} ${x+a},${y+b} ${x},${y+2*b} ${x-a},${y+b}`;
+    const left=`${x-a},${y+b} ${x},${y+2*b} ${x},${y+2*b+hh} ${x-a},${y+b+hh}`;
+    const right=`${x},${y+2*b} ${x+a},${y+b} ${x+a},${y+b+hh} ${x},${y+2*b+hh}`;
+    shapes+=`<polygon points="${left}" fill="#8d989f" stroke="#4c555b"/><polygon points="${right}" fill="#aab2b8" stroke="#4c555b"/><polygon points="${top}" fill="#d9dee1" stroke="#4c555b"/>`;
+  }
+  return `<div class="svg-wrap" style="max-width:360px"><svg viewBox="0 0 300 250" width="100%">${shapes}<text x="18" y="232" font-size="13" font-weight="700">VOORKANT</text><path d="M90 225 L145 225" stroke="#333" stroke-width="2"/><path d="M145 225 l-10 -6 v12 z" fill="#333"/></svg></div>`;
+}
+function frontProfile(grid){return [0,1,2].map(c=>Math.max(grid[0][c],grid[1][c],grid[2][c]))}
+function sideProfile(grid){return [0,1,2].map(r=>Math.max(grid[r][0],grid[r][1],grid[r][2]))}
+function occupied(grid){return grid.map(row=>row.map(v=>v>0?1:0))}
+function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+function mutateOcc(g){
+  const out=g.map(r=>r.slice()); let r=rint(0,2),c=rint(0,2); out[r][c]=out[r][c]?0:1; return out;
+}
+function gridRandom(){
+  let g=Array.from({length:3},()=>Array.from({length:3},()=>Math.random()<.48?rint(1,3):0));
+  if(g.flat().filter(Boolean).length<3) return [[1,0,2],[0,2,0],[1,1,0]];
+  return g;
+}
+
+// SC1
+TOPICS.sc1.qs.bronze=[
+()=>{let a=randPrice(8,35),b=randPrice(12,60);return numQ(`Een T-shirt kost ${euro(a)} en een broek ${euro(b)}. Hoeveel betaal je samen?`,round2(a+b),"euro","Tel beide prijzen op.",`${euro(a)} + ${euro(b)} = ${euro(a+b)}.`)},
+()=>{let total=choice([20,24,28,32,36,40]),den=choice([2,4,5]),num=choice([1,3]); if(num>=den)num=1; let ans=total/den*num; return numQ(`${num}/${den} van ${total} drinkflessen wordt gebruikt. Hoeveel flessen zijn dat?`,ans,"flessen",`Deel ${total} eerst door ${den} en vermenigvuldig daarna met ${num}.`,`${total} ÷ ${den} × ${num} = ${ans}.`)},
+()=>{let base=choice([4,5,6]),need=choice([2,3]),people=base*rint(3,6);let ans=people/base*need;return numQ(`Voor ${base} spelers zijn ${need} grote waterflessen nodig. Hoeveel zijn er nodig voor ${people} spelers?`,ans,"flessen",`Bepaal hoeveel groepen van ${base} er in ${people} zitten.`,`${people} ÷ ${base} × ${need} = ${ans}.`)}
+];
+TOPICS.sc1.qs.silver=[
+()=>{let a=randPrice(30,80),b=randPrice(15,50),c=randPrice(8,30),pay=Math.ceil((a+b+c)/50)*50+50,ans=round2(pay-a-b-c);return numQ(`Je koopt schoenen van ${euro(a)}, een shirt van ${euro(b)} en een riem van ${euro(c)}. Je betaalt met € ${pay}. Hoeveel krijg je terug?`,ans,"euro","Bereken eerst de totale prijs en trek die af van het betaalde bedrag.",`Totaal = ${euro(a+b+c)}. Terug = € ${pay} − ${euro(a+b+c)} = ${euro(ans)}.`)},
+()=>{let p=choice([48,56,64,72,80,96]),discount=choice([15,20,25,30]),ans=round2(p*(1-discount/100));return numQ(`Een hoodie kost € ${p}. Tijdens de solden krijg je ${discount}% korting. Hoeveel betaal je?`,ans,"euro",`Bereken eerst ${discount}% van € ${p}. Trek de korting daarna af.`,`${discount}% van ${p} = ${round2(p*discount/100)}. Te betalen = ${euro(ans)}.`)},
+()=>{let total=choice([35,40,45,50,60]),den=choice([4,5]),num=choice([2,3]); if(num>=den)num=den-1; let used=total/den*num,ans=total-used;return numQ(`Een watertank bevat ${total} liter. Tijdens een activiteit wordt ${num}/${den} van het water gebruikt. Hoeveel liter blijft over?`,ans,"liter",`Bereken eerst hoeveel liter gebruikt wordt. Trek dat af van ${total}.`,`Gebruikt: ${total} ÷ ${den} × ${num} = ${used} L. Over: ${total} − ${used} = ${ans} L.`)},
+()=>{let a=choice([2,3,4]),b=choice([3,5,6]),k=rint(3,7),total=(a+b)*k,ans=a*k;return numQ(`Voor dierenvoer meng je haver en korrels in de verhouding ${a} : ${b}. Je hebt in totaal ${total} kg voer nodig. Hoeveel kilogram haver heb je nodig?`,ans,"kg",`Er zijn ${a+b} gelijke delen. Zoek eerst hoeveel kg één deel is.`,`${total} ÷ ${a+b} = ${k} kg per deel. Haver = ${a} × ${k} = ${ans} kg.`)},
+()=>{let start=rint(900,1500),win=rint(60,140),loss=rint(80,180),bonus=rint(30,90),ans=start+win-loss+bonus;return numQ(`In een game start je met ${start} punten. Je wint ${win}, krijgt een straf van ${loss} en daarna een bonus van ${bonus}. Met hoeveel punten eindig je?`,ans,"punten","Werk de veranderingen in de juiste volgorde uit.",`${start} + ${win} − ${loss} + ${bonus} = ${ans}.`)}
+];
+TOPICS.sc1.qs.gold=[
+()=>{let total=choice([120,128,136,144]),num=choice([3,5]),den=8,pctv=choice([10,15,20]);let ans=round2(total-total*num/den-total*pctv/100);return numQ(`Een fietstocht is ${total} km. Je fietst eerst ${num}/${den} van de tocht. Daarna leg je door pech ${pctv}% van de volledige afstand met een volgwagen af. Hoeveel kilometer fiets je zelf nog?`,ans,"km","Beide delen worden berekend op de volledige afstand.",`${num}/${den} van ${total} = ${round2(total*num/den)} km. ${pctv}% van ${total} = ${round2(total*pctv/100)} km. Over = ${ans} km.`)},
+()=>{let a=randPrice(60,100),b=randPrice(35,70),d=choice([15,20,25]),voucher=choice([20,25,30]),ans=round2((a+b)*(1-d/100)-voucher);return numQ(`Een jas kost ${euro(a)} en een broek ${euro(b)}. Op beide krijg je ${d}% korting. Daarna gebruik je een cadeaubon van € ${voucher}. Hoeveel betaal je nog?`,ans,"euro","Tel eerst de oorspronkelijke prijzen op, pas daarna de korting toe, en trek tenslotte de cadeaubon af.",`Totaal = ${euro(a+b)}. Na korting = ${euro((a+b)*(1-d/100))}. Na cadeaubon = ${euro(ans)}.`)},
+()=>{let veg=2,reg=5,k=choice([5,6,7]),total=(veg+reg)*k,waste=choice([10,20]),regular=reg*k,ans=regular*(1-waste/100);return numQ(`Bij een weekend zijn vegetarische en gewone maaltijden in de verhouding ${veg} : ${reg}. Er zijn ${total} maaltijden. Van de gewone maaltijden wordt ${waste}% niet opgegeten. Hoeveel gewone maaltijden worden wél opgegeten?`,ans,"maaltijden","Verdeel eerst het totaal volgens de verhouding. Pas daarna het percentage toe.",`${total} ÷ 7 = ${k} per deel. Gewone maaltijden = ${reg} × ${k} = ${regular}. Wel opgegeten = ${100-waste}% van ${regular} = ${ans}.`)}
+];
+
+// SC2
+TOPICS.sc2.qs.bronze=[
+()=>{let x=rint(350,950)/10,ans=Math.round(x);return numQ(`Een fietstocht is ${String(x).replace(".",",")} km. Rond af op de dichtstbijzijnde kilometer.`,ans,"km","Kijk naar het cijfer bij de tienden.",`${x} km ≈ ${ans} km.`)},
+()=>{let a=randPrice(15,25),b=randPrice(25,38),c=randPrice(42,58),est=Math.round(a/10)*10+Math.round(b/10)*10+Math.round(c/10)*10;return numQ(`Schat de totaalprijs door elk bedrag af te ronden op tientallen euro: ${euro(a)} + ${euro(b)} + ${euro(c)}.`,est,"euro","Rond elk bedrag afzonderlijk af op een tiental.",`Ongeveer ${Math.round(a/10)*10} + ${Math.round(b/10)*10} + ${Math.round(c/10)*10} = € ${est}.`)},
+()=>{let n=rint(451,849),ans=Math.round(n/100)*100;return numQ(`Bij een wedstrijd zijn ${n} toeschouwers. Rond af op het dichtstbijzijnde honderdtal.`,ans,"toeschouwers","Kijk naar het tiental.",`${n} ≈ ${ans}.`)}
+];
+TOPICS.sc2.qs.silver=[
+()=>{let eps=rint(6,9),dur=choice([47,49,51,53]),total=eps*dur,rounded=Math.round(total/15)*15;return numQ(`Een seizoen heeft ${eps} afleveringen van ${dur} minuten. Bereken de totale kijktijd en rond die zinvol af op een kwartier. Geef je antwoord in minuten.`,rounded,"minuten",`Exact is ${eps} × ${dur} minuten. Rond daarna af op een veelvoud van 15.`,`Exact: ${total} min (${formatMinutes(total)}). Afgerond op een kwartier: ${rounded} min (${formatMinutes(rounded)}).`)},
+()=>{let x=rint(700,980)/10,opts=[Math.round(x/10)*10,Math.round(x),Number(x.toFixed(2))]; let correct=1; return chQ(`Je fietscomputer toont ${String(x).replace(".",",")} km. Je vertelt iemand kort hoeveel je reed. Welke afronding is het meest zinvol?`,opts.map(v=>`${String(v).replace(".",",")} km`),correct,"Voor een kort verteld resultaat is een hele kilometer meestal precies genoeg.",`De dichtstbijzijnde hele kilometer is ${Math.round(x)} km.`)},
+()=>{let vals=[rint(240,255)/10,rint(245,260)/10,rint(238,252)/10],exact=round2(vals.reduce((a,b)=>a+b,0));return numQ(`Drie zakken voer wegen ${vals.map(v=>String(v).replace(".",",")+" kg").join(", ")}. Schat eerst ongeveer 75 kg. Bereken daarna exact. Wat is het exacte totaal?`,exact,"kg","Tel de drie massa's op.",`${vals.join(" + ")} = ${exact} kg. Vergelijk dit met 75 kg.`)},
+()=>{let people=choice([15,17,19,21]),per=choice([0.6,0.75,0.8]),bottle=choice([1.5,2]),need=people*per,ans=Math.ceil(need/bottle);return numQ(`Voor ${people} spelers reken je ${String(per).replace(".",",")} liter drank per speler. Flessen bevatten ${String(bottle).replace(".",",")} liter. Hoeveel flessen moet je minstens kopen?`,ans,"flessen","Bereken eerst hoeveel liter nodig is. Deel door de flesinhoud en rond naar boven af.",`${people} × ${per} = ${round2(need)} L. ${round2(need)} ÷ ${bottle} = ${round2(need/bottle)} → ${ans} flessen.`)}
+];
+TOPICS.sc2.qs.gold=[
+()=>{let a=randPrice(60,75),b=randPrice(65,80),c=randPrice(50,68),budget=200,total=round2(a+b+c);return chQ(`Je hebt €200 voor drie kledingstukken van ${euro(a)}, ${euro(b)} en ${euro(c)}. Is €200 genoeg? Maak eerst een schatting en bereken daarna exact.`,["Ja","Nee"],total<=budget?0:1,"Rond de prijzen eerst af op tientallen. Controleer daarna exact.",`Exact totaal = ${euro(total)}. Dus €200 is ${total<=200?"genoeg":"niet genoeg"}.`)},
+()=>{let dist=rint(1350,1550)/10,speed=rint(285,325)/10,mins=Math.round((dist/speed*60)/5)*5;return numQ(`Een wielrenner rijdt ${String(dist).replace(".",",")} km aan gemiddeld ${String(speed).replace(".",",")} km/u. Bereken de rijtijd en rond af op 5 minuten. Geef je antwoord in minuten.`,mins,"minuten","Tijd = afstand ÷ snelheid. Zet uren daarna om naar minuten.",`${dist} ÷ ${speed} = ${round2(dist/speed)} uur ≈ ${mins} minuten (${formatMinutes(mins)}).`)},
+()=>{let x=rint(801,849)/100;return chQ(`Je berekent dat je ${String(x).replace(".",",")} flessen nodig hebt voor een activiteit. Je mag niet tekortkomen. Wat doe je?`,["Afronden naar 8","Afronden naar 9","Afronden naar 8,5"],1,"Denk aan de betekenis: je kunt geen deel van een fles kopen en je mag niet tekortkomen.","Je hebt 9 volledige flessen nodig. In deze context rond je naar boven af.")}
+];
+
+// SC3
+TOPICS.sc3.qs.bronze=[
+()=>{let g=[[0,0,0],[0,3,0],[0,0,0]];return numQ(`Op één grondplaats staan 3 dozen boven elkaar. Hoeveel vakjes zie je op die plaats in het bovenaanzicht?`,1,"vakje","Een bovenaanzicht toont bezette grondplaatsen, niet het aantal dozen boven elkaar.","Je ziet 1 bezet vakje.",blockScene(g))},
+()=>{let g=[[1,0,0],[2,1,0],[0,0,0]],n=occupied(g).flat().reduce((a,b)=>a+b,0);return numQ(`Hoeveel vakjes zijn bezet in het bovenaanzicht van deze stapeling?`,n,"vakjes","Tel de grondplaatsen waarop minstens één blok staat.",`Er zijn ${n} bezette grondplaatsen.`,blockScene(g))},
+()=>chQ("Vanuit welke richting kijk je voor een bovenaanzicht?",["Van boven","Van voren","Van opzij"],0,"Het woord zegt het letterlijk: boven-aanzicht.","Je kijkt van boven naar beneden.")
+];
+TOPICS.sc3.qs.silver=[
+()=>{let g=gridRandom(),correct=occupied(g),d1=mutateOcc(correct),d2=mutateOcc(correct);while(same(d2,d1)||same(d2,correct))d2=mutateOcc(correct);let opts=shuffle([{g:correct,ok:true},{g:d1},{g:d2}]);return chQ(`Welke 2D-tekening is het juiste bovenaanzicht?`,opts.map((o,i)=>`${letter(i)}<br>${topGrid(o.g)}`),opts.findIndex(o=>o.ok),"Van boven telt alleen of een grondplaats bezet is.",`Het correcte bovenaanzicht bevat precies alle bezette grondplaatsen.`,blockScene(g))},
+()=>{let g=gridRandom(),p=frontProfile(g),d1=p.map((v,i)=>i===0?Math.max(1,v-1):v),d2=p.slice().reverse(); if(JSON.stringify(d1)===JSON.stringify(p))d1[0]=Math.min(3,p[0]+1);let opts=shuffle([{p,ok:true},{p:d1},{p:d2}]);return chQ(`Welke profieltekening past bij het <strong>vooraanzicht</strong>?`,opts.map((o,i)=>`${letter(i)} ${profileView(o.p)}`),opts.findIndex(o=>o.ok),"Per kolom kijk je naar de grootste hoogte die je van voren ziet.",`Vooraanzicht = hoogtes ${p.join(" - ")}.`,blockScene(g))},
+()=>{let g=gridRandom(),p=sideProfile(g),d1=p.map((v,i)=>i===2?Math.max(1,v-1):v),d2=p.slice().reverse(); if(JSON.stringify(d1)===JSON.stringify(p))d1[2]=Math.min(3,p[2]+1);let opts=shuffle([{p,ok:true},{p:d1},{p:d2}]);return chQ(`Welke profieltekening past bij het <strong>zijaanzicht</strong>?`,opts.map((o,i)=>`${letter(i)} ${profileView(o.p)}`),opts.findIndex(o=>o.ok),"Kijk per rij welke grootste hoogte je van opzij ziet.",`Zijaanzicht = hoogtes ${p.join(" - ")}.`,blockScene(g))},
+()=>{let g=[[1,2,0],[0,1,1],[1,0,0]],correct=occupied(g),wrong=mutateOcc(correct),count=correct.flat().reduce((a,b)=>a+b,0);return chQ(`Iemand tekende dit bovenaanzicht: ${topGrid(wrong)}<br>De 3D-opstelling staat hierboven. Wat is zeker waar?`,[`Het bovenaanzicht is correct`,`Er staat precies één vakje fout`,`De hoogtes zijn fout maar de plaatsen kloppen`],1,"Vergelijk alleen bezette grondplaatsen.","De tekening wijkt op precies één grondplaats af.",blockScene(g))},
+()=>chQ(`Twee stapelingen hebben hetzelfde bovenaanzicht. Kunnen ze toch verschillend zijn?`,["Nee, dan zijn ze identiek","Ja, de hoogtes kunnen verschillen","Alleen als ze evenveel blokken hebben"],1,"Een bovenaanzicht verbergt hoogte-informatie.","Ja. Dezelfde grondplaatsen kunnen andere stapelhoogtes hebben.")
+];
+TOPICS.sc3.qs.gold=[
+()=>{let g1=[[1,2,0],[1,1,0],[0,1,0]],g2=[[2,1,0],[1,1,0],[0,1,0]];return chQ(`Deze twee stapelingen hebben hetzelfde bovenaanzicht. Welke uitspraak is juist?`,["Een vooraanzicht kan het verschil tonen","Geen enkel 2D-aanzicht kan het verschil tonen","Alleen het bovenaanzicht toont het verschil"],0,"Kijk naar de verdeling van de hoogtes.","Een vooraanzicht kan verschillen in maximale kolomhoogte zichtbaar maken.",`<div class="grid2">${blockScene(g1)}${blockScene(g2)}</div>`)},
+()=>{let g=[[1,2,0],[1,1,1],[0,0,0]],p=frontProfile(g);return chQ(`Je kent het bovenaanzicht én het vooraanzicht. Waarom is dat sterker dan alleen een bovenaanzicht?`,["Je krijgt ook informatie over hoogte","Je ziet dan altijd elk afzonderlijk blok","Je hoeft de voorkant niet meer te kennen"],0,"Denk aan welke informatie bovenaanzicht verbergt.","Het vooraanzicht voegt hoogte-informatie toe.",`${blockScene(g)}<div><strong>Vooraanzicht:</strong> ${profileView(p)}</div>`)},
+()=>{let g=[[1,2,0],[1,1,1],[0,0,0]],p=frontProfile(g);return chQ(`Welke reeks hoogtes hoort bij het vooraanzicht?`,["1 - 2 - 1","2 - 1 - 1","1 - 1 - 2"],0,"Neem per kolom de grootste hoogte.","Van links naar rechts zijn de maximale hoogtes 1, 2 en 1.",blockScene(g))}
+];
+
+// SC4
+TOPICS.sc4.qs.bronze=[
+()=>{let vals=[rint(8,14),rint(15,22),rint(10,17)],days=["ma","di","wo"],mx=Math.max(...vals),mi=vals.indexOf(mx);return chQ(`Op welke dag werden de meeste T-shirts verkocht?`,days.map((d,i)=>`${d}: ${vals[i]}`),mi,"Zoek het grootste aantal.",`${days[mi]} heeft het grootste aantal: ${mx}.`)},
+()=>{let vals=[rint(3,5),rint(6,8),rint(4,7)],labels=["Noor","Bram","Cato"],mi=vals.indexOf(Math.min(...vals));return chQ(`Wie heeft volgens het staafdiagram het minste aantal game-uren?`,labels,mi,"Zoek de kleinste balk.",`${labels[mi]} heeft het minst.`,barChart(labels,vals,0,10,"Game-uren"))},
+()=>{let n=rint(4,8),p=choice([3.5,4,4.5,5]),ans=n*p;return numQ(`De formule is: totaalprijs = aantal × prijs per stuk. Je bestelt ${n} broodjes van € ${String(p).replace(".",",")}. Wat is de totaalprijs?`,ans,"euro","Vul het aantal en de prijs in de formule in.",`${n} × ${p} = ${euro(ans)}.`)}
+];
+TOPICS.sc4.qs.silver=[
+()=>{let total=20,football=choice([6,8,10]),ans=football/total*100;return numQ(`In een klas van ${total} leerlingen kiezen ${football} leerlingen voetbal. Wat is de <strong>relatieve frequentie</strong> van voetbal?`,ans,"%","Relatieve frequentie = aantal ÷ totaal × 100.",`${football} ÷ ${total} × 100 = ${ans}%.`)},
+()=>{let vals=[rint(5,8),rint(8,12),rint(6,10)],labels=["ma","di","wo"],sum=vals.reduce((a,b)=>a+b,0);return numQ(`Hoeveel items werden in totaal verkocht over de drie dagen?`,sum,"items","Tel de drie balkwaarden op.",`${vals.join(" + ")} = ${sum}.`,barChart(labels,vals,0,15,"Verkoop"))},
+()=>{let vals=[rint(15,25),rint(28,38),rint(20,30),rint(40,52)],labels=["ma","wo","vr","zo"],drop=vals[1]-vals[2];return numQ(`Tussen woensdag en vrijdag daalt de afstand. Hoe groot is die daling?`,drop,"km","Neem het verschil tussen de twee meetpunten.",`${vals[1]} − ${vals[2]} = ${drop} km.`,lineChart(labels,vals,"Trainingskilometers"))},
+()=>{let a=84,b=92;return chQ(`Beide grafieken tonen exact dezelfde cijfers: 84 en 92. Welke grafiek laat het verschil groter lijken?`,["Grafiek A (y-as start bij 0)","Grafiek B (y-as start bij 80)"],1,"Kijk naar het beginpunt van de y-as.","Grafiek B vergroot het visuele verschil omdat de y-as pas bij 80 begint.",`<div class="grid2">${barChart(["W1","W2"],[a,b],0,100,"Grafiek A")}${barChart(["W1","W2"],[a,b],80,100,"Grafiek B")}</div>`)},
+()=>{let win=rint(5,9),draw=rint(2,5),ans=3*win+draw;return numQ(`Bij voetbal geldt: punten = 3 × gewonnen wedstrijden + gelijke spelen. Een ploeg wint ${win} keer en speelt ${draw} keer gelijk. Hoeveel punten heeft ze?`,ans,"punten","Vul beide aantallen in de formule in.",`3 × ${win} + ${draw} = ${ans}.`)},
+()=>{let total=20,bos=10,quiz=2;return numQ(`Bij de scouts kiezen ${bos} van de ${total} leden voor bosspel. Wat is de relatieve frequentie?`,50,"%","Aantal ÷ totaal × 100.",`${bos} ÷ ${total} × 100 = 50%.`)}
+];
+TOPICS.sc4.qs.gold=[
+()=>chQ(`Een grafiek laat Team C veel sterker lijken. Welke combinatie is het meest misleidend?`,["Y-as begint bij 0 en alle balken zijn even breed","Y-as begint bij 40 én de balken hebben verschillende breedtes","Alle labels zijn duidelijk en de schaalstappen zijn gelijk"],1,"Zoek visuele keuzes die verschillen kunstmatig vergroten.","Een afgeknotte y-as en ongelijke balkbreedtes versterken het verschil."),
+()=>{let total=50,p=60,calc=30;return chQ(`Een platform meldt: ${p}% van ${total} spelers koos spel A. Een andere grafiek toont 32 spelers. Kunnen beide tegelijk correct zijn?`,["Ja","Nee"],1,"Bereken eerst 60% van 50.",`${p}% van ${total} = ${calc}. Een balk tot 32 kan dus niet dezelfde gegevens voorstellen.`)},
+()=>chQ(`Een winkel verkoopt 80 jassen in week 1 en 88 in week 2. Welke grafiek is het eerlijkst?`,["Y-as vanaf 0, gelijke schaalstappen, gelijke balkbreedtes en duidelijke labels","Y-as vanaf 78, extra brede balk voor week 2","Geen y-as en alleen twee balken zonder labels"],0,"Een eerlijke grafiek maakt de schaal transparant.","Start bij 0, gebruik gelijke stappen en geef duidelijke labels.")
+];
+
+// SC5
+TOPICS.sc5.qs.bronze=[
+()=>{let a=rint(1,3),arr=[a,a+1,a+2,a+3,a+4],ans=arr[2];return numQ(`Gegevens: ${arr.join(", ")}. Wat is de mediaan?`,ans,"","Bij vijf geordende waarden is de derde de mediaan.",`De middelste waarde is ${ans}.`)},
+()=>{let a=rint(8,15),b=a+rint(5,10),c=b+rint(5,10),ans=(a+b+c)/3;return numQ(`Bereken het gemiddelde van ${a}, ${b} en ${c}.`,ans,"","Tel op en deel door 3.",`(${a} + ${b} + ${c}) ÷ 3 = ${round2(ans)}.`)},
+()=>{let arr=shuffle([45,45,50,55,60]),ans=50;return numQ(`Zet deze tijden eerst in volgorde: ${arr.join(", ")} minuten. Welke waarde ligt in het midden?`,ans,"minuten","Orden van klein naar groot.","45, 45, 50, 55, 60 → mediaan = 50 minuten.")}
+];
+TOPICS.sc5.qs.silver=[
+()=>{let arr=[2,3,3,4,8],avg=4,med=3;return chQ(`Game-uren: ${arr.join(", ")}. Gemiddelde = ${avg}, mediaan = ${med}. Welke waarde beschrijft een 'typische' leerling hier beter?`,["Gemiddelde","Mediaan"],1,"De 8 is een uitschieter en trekt het gemiddelde omhoog.","De mediaan (3 uur) ligt dichter bij de meeste waarden.")},
+()=>{let arr=[45,50,50,55,60],avg=52;return numQ(`Duur van vijf lessen: ${arr.join(", ")} minuten. Bereken het gemiddelde.`,avg,"minuten","Tel alle tijden op en deel door 5.",`${arr.reduce((a,b)=>a+b,0)} ÷ 5 = ${avg} minuten.`)},
+()=>{let arr=[25,26,27,29,95],avg=40.4;return chQ(`Prijzen: €25, €26, €27, €29 en €95. Welke maat geeft de gewone prijs het best weer?`,["Gemiddelde (€40,40)","Mediaan (€27)"],1,"€95 is een sterke uitschieter.","De mediaan €27 geeft de gewone prijs beter weer.")},
+()=>{let arr=[32,38,40,41,49],avg=40,med=40;return numQ(`Fietskilometers: ${arr.join(", ")}. Bereken het gemiddelde.`,avg,"km","Tel alles op en deel door 5.",`${arr.reduce((a,b)=>a+b,0)} ÷ 5 = ${avg} km. De mediaan is ook ${med} km.`)},
+()=>{let A=[3,4,4,4,5],B=[1,2,4,8,10],avgA=4,avgB=5;return chQ(`Groep A: ${A.join(", ")}. Groep B: ${B.join(", ")}. Beide hebben mediaan 4. Wat toont dit?`,["Dezelfde mediaan betekent altijd hetzelfde gemiddelde","Dezelfde mediaan kan samengaan met een ander gemiddelde en andere spreiding","Mediaan en gemiddelde zijn altijd gelijk"],1,"Vergelijk de gemiddelden: A = 4, B = 5.","De mediaan vertelt niet alles over spreiding of gemiddelde.")}
+];
+TOPICS.sc5.qs.gold=[
+()=>{let arr=[8,9,9,10,34];return chQ(`Een groep wandelt ${arr.join(", ")} km over vijf dagen. Het gemiddelde is 14 km. Is dat een goed beeld van een gewone dag?`,["Ja, want het gemiddelde is altijd de beste maat","Niet echt; de mediaan is 9 km en 34 km trekt het gemiddelde omhoog"],1,"Kijk naar de uitschieter 34.","De mediaan 9 km beschrijft een gewone dag beter.")},
+()=>{let original=[10,11,12,13,14],withOut=[10,11,12,13,14,60];return chQ(`Je voegt 60 toe aan de reeks 10, 11, 12, 13, 14. Welke maat verandert sterker?`,["Gemiddelde","Mediaan","Beide even sterk"],0,"Een extreme waarde beïnvloedt de som direct.","Het gemiddelde stijgt veel sterker; de mediaan verschuift maar beperkt.")},
+()=>{let opts=["8, 9, 10, 18, 25","6, 8, 10, 12, 14","10, 10, 10, 10, 30"],ans=0;return chQ(`Welke reeks van vijf getallen heeft mediaan 10 én gemiddelde 14?`,opts,ans,"Gemiddelde 14 betekent dat de som 70 moet zijn. De derde waarde moet 10 zijn.","8 + 9 + 10 + 18 + 25 = 70 en de middelste waarde is 10.")}
+];
+
+// SC6
+TOPICS.sc6.qs.bronze=[
+()=>{let budget=60,a=18,b=35,ans=budget-a-b;return numQ(`Je hebt €${budget}. Een T-shirt kost €${a} en een broek €${b}. Hoeveel geld blijft over?`,ans,"euro","Tel de prijzen op en trek af van het budget.",`${budget} − (${a}+${b}) = €${ans}.`)},
+()=>{let per=0.5,h=choice([3,4,5]),ans=per*h;return numQ(`Een fietser drinkt ${String(per).replace(".",",")} liter per uur en rijdt ${h} uur. Hoeveel liter water heeft hij nodig?`,ans,"liter","Hoeveelheid per uur × aantal uren.",`${per} × ${h} = ${ans} liter.`)},
+()=>{let people=choice([17,18,19,21]),cap=4,ans=Math.ceil(people/cap);return numQ(`Bij de scouts slapen ${people} leerlingen in tenten voor ${cap} personen. Hoeveel tenten zijn minstens nodig?`,ans,"tenten","Deel door 4 en rond naar boven af.",`${people} ÷ ${cap} = ${round2(people/cap)} → ${ans} tenten.`)}
+];
+TOPICS.sc6.qs.silver=[
+()=>{let budget=120,jacket=79.9,disc=20,pants=42.5,newJ=round2(jacket*(1-disc/100)),left=round2(budget-newJ-pants);return numQ(`Je hebt €${budget}. Een jas kost €${jacket.toFixed(2).replace(".",",")} en is ${disc}% afgeprijsd. Een broek kost €${pants.toFixed(2).replace(".",",")}. Hoeveel geld blijft over?`,left,"euro","Bereken eerst de afgeprijsde jas. Tel daarna jas en broek op.",`Jas = ${euro(newJ)}. Totaal = ${euro(newJ+pants)}. Over = ${euro(left)}.`)},
+()=>{let total=choice([90,96,108]),speed=choice([20,24,27]),hours=2.5,done=speed*hours,ans=total-done;return numQ(`Een wielrenner plant ${total} km. Hij rijdt gemiddeld ${speed} km/u. Na ${String(hours).replace(".",",")} uur stopt hij. Hoeveel kilometer moet hij daarna nog rijden?`,ans,"km","Bereken eerst de gereden afstand: snelheid × tijd.",`${speed} × ${hours} = ${done} km. Nog ${total} − ${done} = ${ans} km.`)},
+()=>{let per=180,people=choice([16,17,18,19]),pack=500,grams=per*people,ans=Math.ceil(grams/pack);return numQ(`Voor een maaltijd is ${per} g pasta per persoon nodig. Er eten ${people} personen mee. Pasta zit in pakken van ${pack} g. Hoeveel pakken moet je minstens kopen?`,ans,"pakken","Bereken eerst de totale hoeveelheid in gram en deel door 500.",`${per} × ${people} = ${grams} g. ${grams} ÷ ${pack} = ${round2(grams/pack)} → ${ans} pakken.`)},
+()=>{let per=7.5,horses=choice([5,6,7]),bale=18,total=per*horses,ans=Math.ceil(total/bale);return numQ(`Eén paard gebruikt ${String(per).replace(".",",")} kg hooi per dag. Er zijn ${horses} paarden. Een baal bevat ${bale} kg. Hoeveel volledige balen zijn minstens nodig?`,ans,"balen","Totale hoeveelheid = per paard × aantal paarden. Deel daarna door de baalgrootte.",`${per} × ${horses} = ${total} kg. ${total} ÷ ${bale} = ${round2(total/bale)} → ${ans} balen.`)},
+()=>{let months=6,sub=12,extra=18,budget=90,total=months*sub+extra;return chQ(`Een abonnement kost €${sub} per maand. Je koopt ook één uitbreiding van €${extra}. Je hebt €${budget} voor ${months} maanden. Past dit binnen je budget?`,["Ja","Nee"],total<=budget?0:1,"Bereken de abonnementskosten voor alle maanden en tel de uitbreiding erbij.",`${months} × ${sub} + ${extra} = €${total}. ${total<=budget?"Het past binnen":"Het past niet binnen"} het budget.`)}
+];
+TOPICS.sc6.qs.gold=[
+()=>{let players=23,leaders=4,cap=9,cost=85,dist=38,people=players+leaders,vans=Math.ceil(people/cap),total=vans*cost;return numQ(`Een voetbalploeg reist met ${players} spelers en ${leaders} begeleiders. Een busje heeft ${cap} zitplaatsen en kost €${cost} per dag. De rit is ${dist} km. Wat kosten de nodige busjes samen?`,total,"euro","De ritafstand is hier niet nodig. Bereken eerst het aantal personen en het aantal busjes.",`${people} personen → ${vans} busjes. ${vans} × €${cost} = €${total}.`)},
+()=>{let total=135,first=45,p=60,remain=total-first,second=remain*p/100,ans=remain-second;return numQ(`Een fietstocht is ${total} km. Je rijdt ${first} km voor de middag. Daarna rijd je ${p}% van de resterende afstand. Hoeveel kilometer blijft er dan nog over?`,ans,"km","Bereken eerst wat na de middag nog overblijft; neem daar 60% van.",`Na ${first} km blijft ${remain} km. Je rijdt daarna ${second} km. Over = ${ans} km.`)},
+()=>{let n=40,buy=22,damage=10,sell=35,damaged=n*damage/100,sold=n-damaged,revenue=sold*sell,cost=n*buy,diff=revenue-cost;return numQ(`Een winkel koopt ${n} truien aan €${buy} per stuk. ${damage}% raakt beschadigd en wordt niet verkocht. De rest wordt verkocht voor €${sell} per stuk. Hoeveel euro is de verkoopopbrengst hoger dan de aankoopkost?`,diff,"euro","Bereken aankoopkost, aantal verkoopbare truien en opbrengst.",`Aankoop = €${cost}. Beschadigd = ${damaged}, verkocht = ${sold}. Opbrengst = €${revenue}. Verschil = €${diff}.`)}
+];
+
+
+// ===== EXTRA OEFENBANK V3 =====
+// Doel: per succescriterium 6 Brons-, 10 Zilver- en 6 Goudtemplates.
+// Veel templates genereren telkens nieuwe getallen, zodat dezelfde oefenvorm verschillende concrete opgaven oplevert.
+
+// Nieuwe zichtbare uitlegvideo's. De video's blijven aanvullend op de theorie in de app.
+TOPICS.sc1.videos = [
+  ["Rekenen met procenten – Math with Menno","https://www.youtube.com/watch?v=t6VFTUBcQ5k","t6VFTUBcQ5k","Handig bij korting, procent van een bedrag en procentuele veranderingen."],
+  ["Verhoudingen omrekenen – Math with Menno","https://www.youtube.com/watch?v=9sJKmfZc6A4","9sJKmfZc6A4","Gebruik dit als verhoudingen, breuken en procenten door elkaar lopen."]
+];
+TOPICS.sc2.videos = [
+  ["Schatten – wiskunde klas 1","https://www.youtube.com/watch?v=VwezPyCxW1w","VwezPyCxW1w","Korte herhaling van schatten vóór je exact rekent."]
+];
+TOPICS.sc3.videos = [
+  ["Aanzichten tekenen – boven, voor en zij","https://www.youtube.com/watch?v=HVltCPFByJ4","HVltCPFByJ4","Bekijk dit als bovenaanzicht, vooraanzicht en zijaanzicht nog door elkaar lopen."]
+];
+TOPICS.sc4.videos = [
+  ["Absolute en relatieve frequentie – Wiskunde TV","https://www.youtube.com/watch?v=griOsbVbeEs","griOsbVbeEs","Voor het verschil tussen aantal en deel van het totaal."]
+];
+TOPICS.sc5.videos = [
+  ["Gemiddelde, mediaan en modus – Math with Menno","https://www.youtube.com/watch?v=O87HvmA_lWo","O87HvmA_lWo","Herhaal hoe je gemiddelde en mediaan berekent en wanneer ze verschillen."]
+];
+TOPICS.sc6.videos = [];
+
+// ---- SC1 extra ----
+TOPICS.sc1.qs.bronze.push(
+()=>{let start=rint(40,100),spent=rint(12,start-10),ans=start-spent;return numQ(`Je hebt €${start}. Je geeft €${spent} uit. Hoeveel euro blijft over?`,ans,"euro","Trek het uitgegeven bedrag af van wat je had.",`${start} − ${spent} = €${ans}.`)},
+()=>{let base=choice([40,60,80,100]),p=choice([10,20,25,50]),ans=base*p/100;return numQ(`Hoeveel is ${p}% van ${base}?`,ans,"","Zet het percentage om naar een breuk of decimaal getal.",`${p}% van ${base} = ${p/100} × ${base} = ${ans}.`)},
+()=>{let a=choice([2,3,4]),b=choice([3,4,5]),k=rint(2,6),total=(a+b)*k,ans=b*k;return numQ(`Een mengsel is verdeeld in de verhouding ${a} : ${b}. In totaal is er ${total} kg. Hoeveel kilogram hoort bij het tweede deel?`,ans,"kg",`Samen zijn er ${a+b} gelijke delen.`,`${total} ÷ ${a+b} = ${k} kg per deel. ${b} × ${k} = ${ans} kg.`)}
+);
+TOPICS.sc1.qs.silver.push(
+()=>{let price=choice([52,64,72,80,96]),disc=choice([20,25]),pay=100,newp=price*(1-disc/100),change=round2(pay-newp);return numQ(`Een jas kost €${price} en is ${disc}% afgeprijsd. Je betaalt met €${pay}. Hoeveel geld krijg je terug?`,change,"euro","Bereken eerst de korting en de nieuwe prijs. Pas daarna het wisselgeld.",`Nieuwe prijs = ${euro(newp)}. Terug = ${euro(pay-newp)}.`)},
+()=>{let total=choice([40,45,50,60]),den=5,num=choice([2,3,4]),used=total*num/den,left=total-used;return numQ(`Een voorraad bevat ${total} kg. Er wordt ${num}/${den} van gebruikt. Hoeveel kilogram blijft over?`,left,"kg","Bereken eerst het gebruikte deel en trek dat van het totaal af.",`Gebruikt = ${total} ÷ ${den} × ${num} = ${used} kg. Over = ${left} kg.`)},
+()=>{let a=choice([2,3]),b=choice([4,5]),k=rint(4,8),total=(a+b)*k,ansA=a*k,ansB=b*k;return chQ(`Een recept gebruikt twee ingrediënten in verhouding ${a} : ${b}. Er is ${total} g nodig. Welke verdeling klopt?`,[`${ansA} g en ${ansB} g`,`${ansB} g en ${ansA} g`,`${a*k+5} g en ${b*k-5} g`],0,"Tel eerst het aantal delen en bepaal hoeveel één deel waard is.",`${total} ÷ ${a+b} = ${k} g per deel. Dus ${ansA} g en ${ansB} g.`)},
+()=>{let price=choice([45,60,75,90]),p=choice([10,20,30]),fee=choice([4,6,8]),ans=round2(price*(1-p/100)+fee);return numQ(`Een ticket kost €${price}. Je krijgt ${p}% korting, maar betaalt daarna €${fee} reservatiekosten. Hoeveel betaal je in totaal?`,ans,"euro","Pas eerst de korting toe en tel daarna de vaste kost erbij.",`Na korting: ${euro(price*(1-p/100))}. Met reservatiekost: ${euro(ans)}.`)},
+()=>{let total=choice([24,30,36,42]),a=2,b=choice([3,4,5]);while(total%(a+b)!==0)total+=1;let k=total/(a+b),ans=b*k;return numQ(`In een groep is de verhouding meisjes : jongens = ${a} : ${b}. Er zijn ${total} leerlingen. Hoeveel jongens zijn er?`,ans,"leerlingen","Verdeel het totaal in het aantal delen van de verhouding.",`${a+b} delen. Eén deel = ${total} ÷ ${a+b} = ${round2(k)}. Jongens = ${b} × ${round2(k)} = ${round2(ans)}.`)}
+);
+TOPICS.sc1.qs.gold.push(
+()=>{let price=choice([100,120,160,200]),d1=choice([20,25]),d2=choice([10,15]),ans=round2(price*(1-d1/100)*(1-d2/100));return numQ(`Een artikel kost €${price}. Eerst krijg je ${d1}% korting en daarna nog ${d2}% korting op de nieuwe prijs. Hoeveel betaal je?`,ans,"euro","De tweede korting wordt berekend op de al verlaagde prijs.",`Na ${d1}% korting: ${euro(price*(1-d1/100))}. Daarna nog ${d2}%: ${euro(ans)}.`)},
+()=>{let total=choice([56,70,84]),a=2,b=5,waste=choice([10,20]),regular=total*b/(a+b),left=regular*(1-waste/100);return numQ(`Maaltijden zijn verdeeld in verhouding vegetarisch : gewoon = ${a} : ${b}. Er zijn ${total} maaltijden. Van de gewone maaltijden wordt ${waste}% niet gebruikt. Hoeveel gewone maaltijden worden wel gebruikt?`,left,"maaltijden","Verdeel eerst volgens de verhouding en pas daarna het percentage toe.",`Gewoon = ${regular}. Wel gebruikt = ${100-waste}% van ${regular} = ${left}.`)},
+()=>{let budget=250,a=choice([85,95,110]),b=choice([65,75,90]),disc=20,coupon=30,total=round2((a+b)*(1-disc/100)-coupon),left=round2(budget-total);return numQ(`Je hebt €${budget}. Een jas kost €${a} en een broek €${b}. Op beide krijg je ${disc}% korting. Daarna gebruik je een bon van €${coupon}. Hoeveel budget blijft over?`,left,"euro","Tel, pas de korting op beide artikelen toe, trek de bon af en vergelijk met het budget.",`Te betalen = ${euro(total)}. Over = ${euro(left)}.`)}
+);
+
+// ---- SC2 extra ----
+TOPICS.sc2.qs.bronze.push(
+()=>{let x=rint(115,198),ans=Math.round(x/10)*10;return numQ(`Rond ${x} af op het dichtstbijzijnde tiental.`,ans,"","Kijk naar het cijfer van de eenheden.",`${x} ≈ ${ans}.`)},
+()=>{let a=rint(18,32),b=rint(38,62),est=Math.round(a/10)*10*Math.round(b/10)*10;return numQ(`Schat ${a} × ${b} door beide getallen eerst af te ronden op tientallen.`,est,"","Rond beide factoren af op tientallen en vermenigvuldig die afgeronde getallen.",`${a} ≈ ${Math.round(a/10)*10} en ${b} ≈ ${Math.round(b/10)*10}. Schatting = ${est}.`)},
+()=>{let total=choice([238,247,263,278]),groups=choice([4,5]),est=Math.round(total/10)*10/groups;return numQ(`Schat ${total} ÷ ${groups} door ${total} eerst op een tiental af te ronden.`,est,"","Maak het deeltal eerst eenvoudiger.",`${total} ≈ ${Math.round(total/10)*10}. ${Math.round(total/10)*10} ÷ ${groups} ≈ ${est}.`)}
+);
+TOPICS.sc2.qs.silver.push(
+()=>{let people=rint(21,29),cap=6,ans=Math.ceil(people/cap);return numQ(`Er gaan ${people} leerlingen mee. In één busje passen ${cap} leerlingen. Hoeveel busjes zijn minstens nodig?`,ans,"busjes","Een deel van een busje kan niet. Rond dus naar boven af.",`${people} ÷ ${cap} = ${round2(people/cap)} → ${ans} busjes.`)},
+()=>{let kg=rint(740,890)/10,bag=choice([5,10]),ans=Math.ceil(kg/bag);return numQ(`Je hebt ${String(kg).replace(".",",")} kg zand nodig. Eén zak bevat ${bag} kg. Hoeveel zakken moet je minstens kopen?`,ans,"zakken","Deel de benodigde hoeveelheid door de inhoud per zak en rond naar boven af.",`${kg} ÷ ${bag} = ${round2(kg/bag)} → ${ans} zakken.`)},
+()=>{let mins=rint(103,139),rounded=Math.round(mins/15)*15;return numQ(`Een activiteit duurt exact ${mins} minuten. Rond de duur af op een kwartier. Hoeveel minuten noteer je?`,rounded,"minuten","Zoek het dichtstbijzijnde veelvoud van 15.",`${mins} min ≈ ${rounded} min (${formatMinutes(rounded)}).`)},
+()=>{let a=randPrice(23,38),b=randPrice(42,59),budget=100,total=round2(a+b);return chQ(`Je hebt €100. Twee aankopen kosten ${euro(a)} en ${euro(b)}. Welke snelle schatting helpt het best vóór je exact rekent?`,[`€${Math.round(a/10)*10} + €${Math.round(b/10)*10}`,`€${Math.floor(a)} + €${Math.floor(b)}`,`€${Math.ceil(a*10)/10} + €${Math.ceil(b*10)/10}`],0,"Een snelle schatting gebruikt eenvoudige afgeronde getallen.",`Rond op tientallen: ongeveer €${Math.round(a/10)*10} + €${Math.round(b/10)*10}. Exact is ${euro(total)}.`)},
+()=>{let liters=rint(125,175)/10,bottle=1.5,ans=Math.ceil(liters/bottle);return chQ(`Je hebt ${String(liters).replace(".",",")} liter drank nodig. Flessen zijn ${String(bottle).replace(".",",")} liter. Je berekent ${round2(liters/bottle)} flessen. Wat is het praktische antwoord?`,[`${Math.floor(liters/bottle)} flessen`,`${ans} flessen`,`${round2(liters/bottle)} flessen`],1,"Je koopt alleen volledige flessen en mag niet tekortkomen.",`Je rondt naar boven af: ${ans} flessen.`)}
+);
+TOPICS.sc2.qs.gold.push(
+()=>{let distance=rint(1380,1620)/10,speed=rint(285,335)/10,minutes=distance/speed*60,rounded=Math.round(minutes/5)*5;return numQ(`Een route is ${String(distance).replace(".",",")} km. Je rijdt gemiddeld ${String(speed).replace(".",",")} km/u. Schat eerst met eenvoudige getallen en bereken daarna. Rond de exacte tijd af op 5 minuten. Geef minuten.`,rounded,"minuten","Gebruik tijd = afstand ÷ snelheid. Zet uren om naar minuten.",`${distance} ÷ ${speed} × 60 ≈ ${round2(minutes)} min → ${rounded} min.`)},
+()=>{let n=rint(74,89)/10;return chQ(`Voor een activiteit bereken je ${String(n).replace(".",",")} dozen. Elke doos moet volledig gekocht worden. Welke redenering is juist?`,[`Afronden volgens de gewone regel, dus ${Math.round(n)}`,`Altijd naar boven: ${Math.ceil(n)} dozen`,`Altijd naar beneden: ${Math.floor(n)} dozen`],1,"De context bepaalt hoe je afrondt.","Omdat een tekort niet kan, neem je altijd het eerstvolgende gehele aantal dozen.")},
+()=>{let budget=choice([180,200,220]),vals=[randPrice(55,75),randPrice(50,70),randPrice(45,65)],total=round2(vals.reduce((a,b)=>a+b,0));return chQ(`Je hebt €${budget}. Drie artikelen kosten ${vals.map(euro).join(", ")}. Welke aanpak is het sterkst?`,["Alleen exact rekenen","Eerst grof schatten, daarna exact rekenen en de schatting vergelijken","Alleen alle prijzen naar beneden afronden"],1,"Bij schatten én afronden hoort een controle achteraf.",`Schat eerst. Exact totaal = ${euro(total)}; vergelijk dat daarna met €${budget}.`)}
+);
+
+// ---- SC3 extra ----
+TOPICS.sc3.qs.bronze.push(
+()=>{let g=[[1,0,0],[0,1,0],[0,0,1]];return chQ(`Welke uitspraak over een bovenaanzicht is juist?`,["Je ziet de hoogte van elke stapel precies","Je ziet vooral welke grondplaatsen bezet zijn","Je kijkt vanuit de voorkant"],1,"Een bovenaanzicht kijkt van boven naar de grondplaatsen.","Je ziet bezette grondplaatsen, niet automatisch de hoogte.",blockScene(g))},
+()=>{let vals=[1,2,1];return chQ(`Dit profiel heeft hoogtes 1 - 2 - 1. Welk aanzicht laat hoogte per kolom zien?`,["Bovenaanzicht","Vooraanzicht","Plattegrond zonder hoogtes"],1,"Een vooraanzicht toont hoogte.","Het vooraanzicht toont per kolom hoe hoog de stapeling is.",profileView(vals))},
+()=>{let g=[[2,0,0],[0,0,0],[0,0,0]];return chQ(`Twee blokken staan exact op elkaar. Hoe ziet die plek eruit in het bovenaanzicht?`,["Eén bezet vakje","Twee vakjes naast elkaar","Twee vakjes boven elkaar"],0,"Van boven vallen beide blokken op dezelfde grondplaats.","Je ziet één bezet grondvak.",blockScene(g))}
+);
+TOPICS.sc3.qs.silver.push(
+()=>{let g=gridRandom(),correct=occupied(g),wrong=mutateOcc(correct);return chQ(`Vergelijk de stapeling met de twee bovenaanzichten. Welke klopt?`,[`A ${topGrid(correct)}`,`B ${topGrid(wrong)}`],0,"Controleer grondplaats per grondplaats.","A bevat exact dezelfde bezette plaatsen.",blockScene(g))},
+()=>{let g=gridRandom(),front=frontProfile(g),side=sideProfile(g);return chQ(`Welke combinatie hoort bij deze stapeling?`,[`Voor: ${front.join("-")} · Zij: ${side.join("-")}`,`Voor: ${side.join("-")} · Zij: ${front.join("-")}`,`Voor: ${front.slice().reverse().join("-")} · Zij: ${side.slice().reverse().join("-")}`],0,"Lees voor en zij elk vanuit hun eigen richting.","De eerste combinatie gebruikt de juiste maximale hoogtes per richting.",blockScene(g))},
+()=>{let g=[[1,2,0],[0,1,1],[1,0,0]],occ=occupied(g),wrong=mutateOcc(occ);return chQ(`Een leerling tekent ${topGrid(wrong)} als bovenaanzicht. Wat moet hij eerst controleren?`,["Of elk bezet grondvak overeenkomt met de 3D-opstelling","Of alle hoogtes in het bovenaanzicht staan","Of de kleuren exact kloppen"],0,"Bovenaanzicht gaat eerst over bezette grondplaatsen.","Controleer de positie van elk bezet grondvak.",blockScene(g))},
+()=>{let g=[[1,3,0],[1,1,0],[0,1,0]],front=frontProfile(g);return numQ(`Hoe hoog is de middelste kolom in het vooraanzicht?`,front[1],"blokken","Kijk in de middelste kolom naar de grootste stapelhoogte.",`De grootste hoogte in de middelste kolom is ${front[1]}.`,blockScene(g))},
+()=>{let g=[[1,1,0],[0,2,1],[0,0,0]],occ=occupied(g);return numQ(`Hoeveel bezette grondplaatsen telt het correcte bovenaanzicht?`,occ.flat().reduce((a,b)=>a+b,0),"plaatsen","Tel elke plaats met minstens één blok één keer.",`Er zijn ${occ.flat().reduce((a,b)=>a+b,0)} bezette grondplaatsen.`,blockScene(g))}
+);
+TOPICS.sc3.qs.gold.push(
+()=>{let g=[[1,3,0],[1,1,1],[0,0,1]],f=frontProfile(g),s=sideProfile(g);return chQ(`Je krijgt twee profielen: voor = ${f.join("-")} en zij = ${s.join("-")}. Waarom zijn twee aanzichten nuttiger dan één?`,["Ze beperken het aantal mogelijke 3D-opstellingen","Ze tonen automatisch elk afzonderlijk blok","Ze maken een bovenaanzicht overbodig"],0,"Meer richtingen geven meer informatie.","Twee profielen leggen meer beperkingen op aan de mogelijke 3D-vorm.",blockScene(g))},
+()=>{let g1=[[1,2,0],[1,0,0],[0,1,0]],g2=[[2,1,0],[1,0,0],[0,1,0]];return chQ(`Deze opstellingen bezetten dezelfde grondplaatsen. Welke informatie heb je nodig om ze uit elkaar te houden?`,["Alleen het aantal bezette grondplaatsen","Minstens één aanzicht met hoogte-informatie","Alleen de kleur van de blokken"],1,"Het verschil zit in hoogteverdeling.","Een voor- of zijaanzicht kan hoogteverschillen tonen.",`<div class="grid2">${blockScene(g1)}${blockScene(g2)}</div>`)},
+()=>{let g=gridRandom(),f=frontProfile(g);return chQ(`Welke controle is het beste nadat je een vooraanzicht tekent?`,["Per kolom nagaan of je de grootste zichtbare hoogte gebruikte","Alle blokken in totaal tellen en dat aantal tekenen","Alleen kijken of er drie kolommen zijn"],0,"Een profiel wordt per kolom opgebouwd.","Controleer per kolom de maximale hoogte.",blockScene(g))}
+);
+
+// ---- SC4 extra ----
+TOPICS.sc4.qs.bronze.push(
+()=>{let a=rint(10,15),b=rint(16,22),c=rint(12,18),vals=[a,b,c],max=Math.max(...vals);return numQ(`Een tabel toont maandag ${a}, dinsdag ${b} en woensdag ${c} verkochte petten. Hoeveel petten zijn er op de beste dag verkocht?`,max,"petten","Zoek het grootste getal in de tabel.",`Het grootste aantal is ${max}.`)},
+()=>{let total=20,count=choice([4,5,8,10]);return numQ(`${count} van de ${total} leerlingen kiezen basketbal. Wat is de absolute frequentie?`,count,"leerlingen","Absolute frequentie betekent: het aantal.",`De absolute frequentie is gewoon ${count}.`)},
+()=>{let n=rint(4,8),price=choice([3,3.5,4]),ans=n*price;return numQ(`Formule: totaal = aantal × prijs. Je koopt ${n} drankjes van €${String(price).replace(".",",")}. Wat is het totaal?`,ans,"euro","Vul de twee waarden in de formule in.",`${n} × ${price} = ${euro(ans)}.`)}
+);
+TOPICS.sc4.qs.silver.push(
+()=>{let total=25,count=choice([5,10,15]),ans=count/total*100;return numQ(`Van ${total} leerlingen komen er ${count} met de fiets. Wat is de relatieve frequentie?`,ans,"%","Aantal ÷ totaal × 100.",`${count} ÷ ${total} × 100 = ${ans}%.`)},
+()=>{let vals=[8,12,10],labels=["ma","di","wo"];return chQ(`Welke tabel hoort bij deze grafiek?`,["ma 8 · di 12 · wo 10","ma 12 · di 8 · wo 10","ma 8 · di 10 · wo 12"],0,"Lees elke balk afzonderlijk af.","De balken geven 8, 12 en 10.",barChart(labels,vals,0,15,"Verkoop petten"))},
+()=>{let a=rint(70,85),b=a+rint(5,10);return chQ(`Twee grafieken tonen dezelfde waarden ${a} en ${b}. Welke keuze maakt een grafiek sneller misleidend?`,["Y-as start bij 0","Y-as start vlak onder de kleinste waarde","Duidelijke labels toevoegen"],1,"Een afgekorte y-as kan een klein verschil groot doen lijken.",`Een y-as die pas vlak onder ${a} start vergroot het visuele verschil.`)},
+()=>{let w=rint(4,8),d=rint(1,4),ans=3*w+d;return numQ(`Formule: punten = 3 × gewonnen + gelijk. Een ploeg wint ${w} keer en speelt ${d} keer gelijk. Bereken de punten.`,ans,"punten","Vervang de woorden in de formule door de aantallen.",`3 × ${w} + ${d} = ${ans}.`)},
+()=>{let total=40,a=choice([8,10,12,16]),b=total-a;return chQ(`Categorie A komt ${a} keer voor op ${total} waarnemingen. Welke combinatie klopt?`,[`absolute = ${a}; relatieve = ${a/total*100}%`,`absolute = ${a/total*100}; relatieve = ${a}%`,`absolute = ${b}; relatieve = ${a}%`],0,"Absoluut is het aantal; relatief is het percentage.",`${a}/${total} × 100 = ${a/total*100}%.`)}
+);
+TOPICS.sc4.qs.gold.push(
+()=>{let total=80,p=35,calc=total*p/100,shown=calc+3;return chQ(`Een verslag zegt dat ${p}% van ${total} leerlingen optie A kiest. Een grafiek toont ${shown} leerlingen. Kunnen beide kloppen?`,["Ja","Nee"],1,"Bereken het aantal dat bij het percentage hoort.",`${p}% van ${total} = ${calc}. ${shown} kan dus niet dezelfde gegevens voorstellen.`)},
+()=>{let vals=[82,88];return chQ(`Welke beschrijving geeft een eerlijke grafiek van 82 en 88?`,["Y-as 0–100, gelijke balkbreedtes en duidelijke labels","Y-as 80–90 en een extra brede balk voor 88","Geen cijfers op de y-as"],0,"Eerlijk betekent dat de schaal transparant is en verschillen niet kunstmatig worden uitvergroot.","De eerste voorstelling is het meest transparant.")},
+()=>{let n=50,p=60,abs=n*p/100;return chQ(`Een tabel geeft absolute frequentie ${abs} op totaal ${n}. Een cirkeldiagram toont 60%. Welke controle is het sterkst?`,[`${abs} ÷ ${n} × 100 = 60%`,`60 ÷ ${abs} = ${round2(60/abs)}`,`${n} − ${abs} = ${n-abs}`],0,"Controleer of absoluut en relatief bij elkaar passen.",`${abs} ÷ ${n} × 100 = 60%.`)}
+);
+
+// ---- SC5 extra ----
+TOPICS.sc5.qs.bronze.push(
+()=>{let arr=[4,5,6,7,8],ans=6;return numQ(`Wat is de mediaan van ${arr.join(", ")}?`,ans,"","Bij vijf geordende getallen is het derde getal de mediaan.","De mediaan is 6.")},
+()=>{let arr=[12,18,24],ans=18;return numQ(`Wat is het gemiddelde van ${arr.join(", ")}?`,ans,"","Tel op en deel door 3.",`(${arr.join(" + ")}) ÷ 3 = ${ans}.`)},
+()=>{let arr=shuffle([20,25,30,35,40]);return chQ(`Wat moet je eerst doen om de mediaan van ${arr.join(", ")} te vinden?`,["Van klein naar groot ordenen","Alles vermenigvuldigen","Alle waarden afronden"],0,"De mediaan is de middelste waarde in een geordende reeks.","Orden de waarden eerst van klein naar groot.")}
+);
+TOPICS.sc5.qs.silver.push(
+()=>{let arr=[6,7,7,8,17],avg=9,med=7;return chQ(`Gegevens: ${arr.join(", ")}. Gemiddelde = ${avg}, mediaan = ${med}. Welke maat geeft een typische waarde beter weer?`,["Gemiddelde","Mediaan"],1,"17 ligt ver van de andere waarden.","De mediaan wordt minder sterk beïnvloed door de uitschieter 17.")},
+()=>{let arr=[18,20,21,22,24],sum=arr.reduce((a,b)=>a+b,0),avg=sum/5;return numQ(`Bereken het gemiddelde van ${arr.join(", ")}.`,avg,"","Tel alle vijf waarden op en deel door 5.",`${sum} ÷ 5 = ${avg}.`)},
+()=>{let arr=[12,14,15,15,44],med=15;return numQ(`Wat is de mediaan van ${arr.join(", ")}?`,med,"","De waarden staan al in volgorde. Neem de middelste.","De derde waarde is 15.")},
+()=>{let A=[2,4,4,4,6],B=[1,2,4,7,11];return chQ(`Beide reeksen hebben mediaan 4. Welke uitspraak klopt?`,["Ze moeten ook hetzelfde gemiddelde hebben","Ze kunnen een ander gemiddelde en andere spreiding hebben","Alle waarden moeten hetzelfde zijn"],1,"De mediaan vertelt alleen iets over het midden.","De reeksen kunnen ondanks dezelfde mediaan sterk verschillen.")},
+()=>{let arr=[30,31,32,33,80];let avg=arr.reduce((a,b)=>a+b,0)/5;return chQ(`Reeks: ${arr.join(", ")}. Welke maat zal door de 80 het sterkst omhooggetrokken worden?`,["Gemiddelde","Mediaan"],0,"Een uitschieter telt volledig mee in de som.","Het gemiddelde is gevoeliger voor de uitschieter.")}
+);
+TOPICS.sc5.qs.gold.push(
+()=>{let opts=["7, 9, 10, 19, 25","8, 9, 10, 14, 19","10, 10, 10, 10, 30"];return chQ(`Welke reeks heeft mediaan 10 en gemiddelde 14?`,opts,0,"Bij vijf getallen met gemiddelde 14 moet de som 70 zijn.","7+9+10+19+25=70 en de middelste waarde is 10.")},
+()=>{let base=[9,10,11,12,13],ext=55;return chQ(`Aan ${base.join(", ")} voeg je ${ext} toe. Wat verwacht je vóór je rekent?`,["Het gemiddelde verandert sterker dan de mediaan","De mediaan verandert sterker dan het gemiddelde","Beide blijven gelijk"],0,"De extreme waarde beïnvloedt de som sterk.","Het gemiddelde reageert sterker op de uitschieter.")},
+()=>{let arr=[5,6,6,7,36];let avg=12,med=6;return chQ(`Een sportgroep registreert ${arr.join(", ")} km. Iemand zegt: “Een gewone training is 12 km, want dat is het gemiddelde.” Hoe beoordeel je dat?`,["Goed: gemiddelde is altijd de beste maat","Twijfelachtig: mediaan 6 km ligt dichter bij vier van de vijf trainingen"],1,"Vergelijk beide maten met de meeste waarnemingen.","De mediaan geeft hier een veel representatiever beeld.")}
+);
+
+// ---- SC6 extra ----
+TOPICS.sc6.qs.bronze.push(
+()=>{let n=choice([6,8,10]),price=choice([4,5,6]),ans=n*price;return numQ(`${n} leerlingen betalen elk €${price}. Hoeveel betalen ze samen?`,ans,"euro","Aantal × prijs per leerling.",`${n} × €${price} = €${ans}.`)},
+()=>{let total=choice([48,60,72]),used=choice([18,24,30]),ans=total-used;return numQ(`Een voorraad bevat ${total} liter. Er wordt ${used} liter gebruikt. Hoeveel liter blijft over?`,ans,"liter","Trek de gebruikte hoeveelheid af van het totaal.",`${total} − ${used} = ${ans} liter.`)},
+()=>{let people=choice([13,14,15,16]),per=2,ans=people*per;return numQ(`Voor ${people} personen zijn elk ${per} broodjes nodig. Hoeveel broodjes heb je in totaal nodig?`,ans,"broodjes","Aantal personen × broodjes per persoon.",`${people} × ${per} = ${ans}.`)}
+);
+TOPICS.sc6.qs.silver.push(
+()=>{let people=choice([18,22,26]),per=0.75,bottle=1.5,total=people*per,ans=Math.ceil(total/bottle);return numQ(`Voor ${people} sporters reken je ${String(per).replace(".",",")} L drank per persoon. Flessen bevatten ${String(bottle).replace(".",",")} L. Hoeveel flessen koop je minstens?`,ans,"flessen","Bereken eerst de totale liters, deel door 1,5 en rond naar boven.",`${people} × ${per} = ${total} L. ${total} ÷ ${bottle} = ${round2(total/bottle)} → ${ans}.`)},
+()=>{let budget=150,price=choice([84,96,108]),disc=25,extra=choice([28,35,42]),newp=price*.75,left=round2(budget-newp-extra);return numQ(`Je hebt €${budget}. Een jas van €${price} krijgt ${disc}% korting. Je koopt ook schoenen van €${extra}. Hoeveel geld blijft over?`,left,"euro","Bereken eerst de nieuwe jasprijs, tel de schoenen erbij en vergelijk met het budget.",`Jas = ${euro(newp)}. Totaal = ${euro(newp+extra)}. Over = ${euro(left)}.`)},
+()=>{let total=choice([105,120,135]),first=choice([30,45]),p=50,remain=total-first,second=remain*.5,ans=remain-second;return numQ(`Een tocht is ${total} km. Je rijdt eerst ${first} km. Daarna rijd je 50% van de resterende afstand. Hoeveel kilometer blijft nog over?`,ans,"km","Trek eerst de eerste afstand af. Neem daarna de helft van wat rest.",`Na deel 1 blijft ${remain} km. Daarna rijd je ${second} km. Over = ${ans} km.`)},
+()=>{let n=choice([15,17,19]),g=choice([160,180,200]),pack=500,total=n*g,ans=Math.ceil(total/pack);return numQ(`Voor ${n} personen is ${g} g rijst per persoon nodig. Pakken bevatten ${pack} g. Hoeveel pakken koop je minstens?`,ans,"pakken","Bereken eerst het totaal in gram.",`${n} × ${g} = ${total} g. ${total} ÷ ${pack} = ${round2(total/pack)} → ${ans} pakken.`)},
+()=>{let people=choice([25,28,31]),cap=8,cost=75,vans=Math.ceil(people/cap),ans=vans*cost;return numQ(`${people} personen reizen met busjes van ${cap} plaatsen. Eén busje kost €${cost}. Wat kosten de nodige busjes samen?`,ans,"euro","Bereken eerst hoeveel busjes je minstens nodig hebt.",`${people} ÷ ${cap} → ${vans} busjes. ${vans} × €${cost} = €${ans}.`)}
+);
+TOPICS.sc6.qs.gold.push(
+()=>{let n=50,buy=18,damage=12,sell=30,damaged=n*damage/100,sold=n-damaged,cost=n*buy,revenue=sold*sell,diff=revenue-cost;return numQ(`Een winkel koopt ${n} stuks aan €${buy}. ${damage}% raakt beschadigd. De rest wordt verkocht voor €${sell}. Hoeveel euro ligt de verkoopopbrengst boven de aankoopkost?`,diff,"euro","Bereken aankoopkost, beschadigde stuks, verkochte stuks en opbrengst.",`Aankoop €${cost}; beschadigd ${damaged}; verkocht ${sold}; opbrengst €${revenue}; verschil €${diff}.`)},
+()=>{let total=180,first=60,p=65,remain=total-first,second=remain*p/100,ans=remain-second;return numQ(`Een route is ${total} km. Je legt eerst ${first} km af. Daarna doe je ${p}% van de resterende afstand. Hoeveel kilometer blijft er over?`,ans,"km","Pas het percentage toe op de resterende afstand, niet op het oorspronkelijke totaal.",`Na ${first} km blijft ${remain}. ${p}% daarvan = ${second}. Over = ${ans} km.`)},
+()=>{let people=34,cap=9,cost=92,km=47,vans=Math.ceil(people/cap),ans=vans*cost;return chQ(`${people} personen moeten vervoerd worden. Een busje heeft ${cap} plaatsen en kost €${cost}. De rit is ${km} km. Welke informatie is niet nodig om de totale huurkost te berekenen?`,[`${people} personen`,`€${cost} per busje`,`${km} km ritafstand`],2,"De huurprijs is per busje, niet per kilometer.",`Je hebt ${vans} busjes nodig. Kost = €${ans}. De ${km} km is overbodig.`)}
+);
+
+const STORE_KEY="wiskracht_lab_v1";
+let state=JSON.parse(localStorage.getItem(STORE_KEY)||'{"attempts":[]}');
+let current={topic:null,level:null,q:null,selected:null,mixed:false,mixLeft:0};
+
+function save(){localStorage.setItem(STORE_KEY,JSON.stringify(state))}
+function logAttempt(topic,level,correct){state.attempts.push({topic,level,correct,ts:new Date().toISOString()});save()}
+function stats(topic,level="silver"){
+  const a=state.attempts.filter(x=>x.topic===topic&&x.level===level);
+  return {n:a.length,ok:a.filter(x=>x.correct).length,pct:a.length?Math.round(a.filter(x=>x.correct).length/a.length*100):0};
+}
+function mastery(topic){
+  const s=stats(topic,"silver"); if(s.n<5)return "Nog oefenen"; if(s.pct>=80)return "Zilver beheerst"; if(s.pct>=60)return "Op weg"; return "Extra oefenen";
+}
+
+function goHome(){
+  current={topic:null,level:null,q:null,selected:null,mixed:false,mixLeft:0};
+  let cards=Object.entries(TOPICS).map(([id,t])=>{
+    const s=stats(id,"silver");
+    return `<div class="topic-card">
+      <div class="code">${t.code}</div><h3>${t.short}</h3>
+      <div class="criterion">${t.criterion}</div>
+      <div class="muted">Zilver: ${s.n?`${s.ok}/${s.n} juist (${s.pct}%)`:"nog niet geoefend"} · ${mastery(id)}</div>
+      <div class="progressbar"><span style="width:${s.pct}%"></span></div>
+      <div class="actions"><button class="btn primary" onclick="showTopic('${id}')">Theorie & oefenen</button><button class="btn silver" onclick="startPractice('${id}','silver')">Start Zilver</button></div>
+    </div>`;
+  }).join("");
+  document.getElementById("app").innerHTML=`
+    <section class="hero">
+      <h1>Wiskracht LAB</h1>
+      <p>Oefen dezelfde wiskundige vaardigheden als in de les, met telkens nieuwe getallen en contexten.</p>
+      <div class="level-strip">
+        <div class="level"><strong>Brons</strong>Extra steun. Eén vaardigheid per keer en duidelijke tussenstappen.<br><span class="note">36 oefentemplates</span></div>
+        <div class="level"><strong>Zilver</strong><b>Dit niveau moet je beheersen.</b> Herkenbare context, zelf de aanpak kiezen en geregeld meerdere stappen.<br><span class="note">60 oefentemplates</span></div>
+        <div class="level"><strong>Goud</strong>Combineer, beoordeel en selecteer zelf relevante informatie.<br><span class="note">36 oefentemplates</span></div>
+      </div>
+      <div class="actions"><button class="btn primary" onclick="startMixed()">Oefen een Zilvermix</button></div>
+    </section>
+    <section class="topics">${cards}</section>
+    <div class="footer-note">Je voortgang wordt alleen op dit toestel en in deze browser bewaard. De kern van de app werkt zonder internet; videolinks openen extern.</div>`;
+}
+function showTopic(id){
+  const t=TOPICS[id]; current.topic=id;
+  document.getElementById("app").innerHTML=`
+    <section class="panel">
+      <div class="code">${t.code}</div><h1>${t.title}</h1>
+      <p><strong>Succescriterium:</strong> ${t.criterion}</p>
+    </section>
+    <section class="panel">
+      <h2>Theorie</h2>
+      <div class="theory-grid"><div>${t.theory}</div><div>
+        <h3>Uitlegvideo${t.videos.length===1?"":"’s"}</h3>
+        ${t.videos.length?`<div class="video-grid">${t.videos.map(v=>`
+          <div class="video-card">
+            <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${v[2]}" title="${v[0]}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            <div class="video-info"><strong>${v[0]}</strong><div class="video-note">${v[3]||""}</div><a target="_blank" rel="noopener" href="${v[1]}">Open op YouTube</a></div>
+          </div>`).join("")}</div>`:`<p class="muted">Bij dit onderdeel is de korte uitleg in de app zelf nuttiger dan een extra filmpje.</p>`}
+        <p class="note">De video’s zijn aanvullend en vragen internet. Lukt afspelen in de app niet door de schoolfilter, gebruik dan ‘Open op YouTube’.</p>
+      </div></div>
+    </section>
+    <section class="panel"><h2>Kies je niveau</h2>
+      <p>Start bij <strong>Zilver</strong>. Loop je vast? Ga tijdelijk naar Brons en keer daarna terug naar Zilver.</p>
+      <div class="level-buttons">
+        <button class="btn bronze" onclick="startPractice('${id}','bronze')">Brons · extra steun</button>
+        <button class="btn silver" onclick="startPractice('${id}','silver')">Zilver · vereist niveau</button>
+        <button class="btn gold" onclick="startPractice('${id}','gold')">Goud · uitdaging</button>
+      </div>
+    </section>`;
+}
+function startPractice(topic,level){
+  current={topic,level,q:null,selected:null,mixed:false,mixLeft:0};
+  nextQuestion();
+}
+function startMixed(){
+  current={topic:null,level:"silver",q:null,selected:null,mixed:true,mixLeft:10,mixDone:0,mixOk:0,mixSkipped:0};
+  nextQuestion();
+}
+function nextQuestion(){
+  if(current.mixed && current.mixLeft<=0){return showMixResult()}
+  let topic=current.topic;
+  if(current.mixed) topic=choice(Object.keys(TOPICS));
+  const arr=TOPICS[topic].qs[current.level];
+  current.topic=topic; current.selected=null; current.q=choice(arr)();
+  renderQuestion();
+}
+function renderQuestion(){
+  const t=TOPICS[current.topic],q=current.q,levelLabel={bronze:"Brons",silver:"Zilver",gold:"Goud"}[current.level];
+  let answer="";
+  if(q.type==="number"){
+    answer=`<div class="answer-row"><input id="numAns" inputmode="decimal" placeholder="jouw antwoord"><span>${q.unit||""}</span><button class="btn primary" onclick="checkAnswer()">Controleer</button></div>`;
+  }else{
+    answer=`<div class="choice-list">${q.options.map((o,i)=>`<button class="choice" id="choice${i}" onclick="selectChoice(${i})">${o}</button>`).join("")}</div><div class="answer-row"><button class="btn primary" onclick="checkAnswer()">Controleer</button></div>`;
+  }
+  document.getElementById("app").innerHTML=`
+    <section class="question-card">
+      <div class="question-head">
+        <div><div class="code">${t.code}</div><h2>${t.short}</h2></div>
+        <div class="pill">${current.mixed?`Zilvermix · nog ${current.mixLeft}`:levelLabel}</div>
+      </div>
+      <div class="prompt">${q.prompt}</div>
+      ${q.visual?`<div class="visual">${q.visual}</div>`:""}
+      ${answer}
+      <div class="actions" style="margin-top:12px">
+        <button class="btn soft" onclick="showHint()">Hint</button>
+        <button class="btn soft" onclick="showSolution()">Toon uitwerking</button>
+        <button class="btn soft" onclick="skipQuestion()">Overslaan</button>
+        ${!current.mixed&&current.level==="silver"?`<button class="btn bronze" onclick="startPractice('${current.topic}','bronze')">Even naar Brons</button>`:""}
+        <button class="btn" onclick="${current.mixed?'goHome()':`showTopic('${current.topic}')`}">Stop</button>
+      </div>
+      <div id="feedback"></div>
+    </section>`;
+}
+function selectChoice(i){
+  current.selected=i;
+  document.querySelectorAll(".choice").forEach((el,j)=>el.classList.toggle("selected",i===j));
+}
+function parseNum(v){return Number(String(v).trim().replace(",",".").replace(/[^\d.\-]/g,""))}
+function checkAnswer(){
+  const q=current.q; let correct=false;
+  if(q.type==="number"){
+    const el=document.getElementById("numAns"),v=parseNum(el.value);
+    if(Number.isNaN(v)) return showFeedback("Vul eerst een getal in.","hint");
+    correct=Math.abs(v-q.answer)<=q.tolerance;
+  }else{
+    if(current.selected===null) return showFeedback("Kies eerst een antwoord.","hint");
+    correct=current.selected===q.answerIndex;
+  }
+  logAttempt(current.topic,current.level,correct);
+  if(current.mixed){current.mixDone++; if(correct)current.mixOk++; current.mixLeft--}
+  if(correct){
+    showFeedback(`<strong>Juist.</strong><div class="solution">${q.solution}</div><div class="actions" style="margin-top:10px"><button class="btn primary" onclick="nextQuestion()">Volgende oefening</button></div>`,"ok");
+  }else{
+    showFeedback(`<strong>Nog niet.</strong> Bekijk je aanpak opnieuw. <button class="btn soft" style="margin-left:8px" onclick="showHint()">Toon hint</button>`,"bad");
+  }
+}
+function skipQuestion(){
+  if(current.mixed){
+    current.mixSkipped=(current.mixSkipped||0)+1;
+  }
+  nextQuestion();
+}
+function showHint(){showFeedback(`<strong>Hint:</strong> ${current.q.hint}`,"hint")}
+function showSolution(){showFeedback(`<strong>Uitwerking:</strong><div class="solution">${current.q.solution}</div><div class="actions" style="margin-top:10px"><button class="btn primary" onclick="nextQuestion()">Volgende oefening</button></div>`,"hint")}
+function showFeedback(html,kind){document.getElementById("feedback").innerHTML=`<div class="feedback ${kind}">${html}</div>`}
+function showMixResult(){
+  document.getElementById("app").innerHTML=`<section class="hero"><h1>Zilvermix klaar</h1><div class="stat-big">${current.mixOk}/${current.mixDone}</div><p>Je hebt ${current.mixOk} van de ${current.mixDone} beantwoorde oefeningen bij de eerste controle juist.</p>
+      <p class="muted">Overgeslagen oefeningen tellen niet mee in je score${current.mixSkipped?` (${current.mixSkipped} overgeslagen)`:``}.</p><div class="actions"><button class="btn primary" onclick="startMixed()">Nieuwe Zilvermix</button><button class="btn" onclick="goHome()">Terug naar start</button></div></section>`;
+}
+function showTeacher(){
+  let rows=Object.entries(TOPICS).map(([id,t])=>{
+    const b=stats(id,"bronze"),s=stats(id,"silver"),g=stats(id,"gold");
+    return `<tr><td>${t.code} · ${t.short}</td><td>${b.n?b.pct+"% ("+b.n+")":"-"}</td><td><strong>${s.n?s.pct+"% ("+s.n+")":"-"}</strong></td><td>${g.n?g.pct+"% ("+g.n+")":"-"}</td><td>${mastery(id)}</td></tr>`;
+  }).join("");
+  const all=state.attempts,ok=all.filter(x=>x.correct).length;
+  document.getElementById("app").innerHTML=`
+    <section class="hero"><h1>Mijn voortgang</h1><p>Deze gegevens staan alleen lokaal in deze browser.</p>
+      <div class="stats"><div class="stat-card"><div class="stat-big">${all.length}</div>pogingen</div><div class="stat-card"><div class="stat-big">${all.length?Math.round(ok/all.length*100):0}%</div>juist</div></div>
+    </section>
+    <section class="panel"><table><thead><tr><th>Doel</th><th>Brons</th><th>Zilver</th><th>Goud</th><th>Indicatie</th></tr></thead><tbody>${rows}</tbody></table></section>
+    <section class="panel"><div class="actions"><button class="btn" onclick="exportCSV()">Exporteer CSV</button><button class="btn" onclick="resetProgress()">Wis lokale voortgang</button><button class="btn primary" onclick="goHome()">Terug</button></div></section>`;
+}
+function exportCSV(){
+  let rows=[["tijd","succescriterium","niveau","juist"]];
+  state.attempts.forEach(a=>rows.push([a.ts,TOPICS[a.topic].code,a.level,a.correct?"ja":"nee"]));
+  const csv=rows.map(r=>r.join(";")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="wiskracht_voortgang.csv";a.click();URL.revokeObjectURL(url);
+}
+function resetProgress(){
+  if(confirm("Wil je de lokale voortgang op dit toestel wissen?")){state={attempts:[]};save();showTeacher()}
+}
+
+goHome();
+</script>
+</body>
+</html>
